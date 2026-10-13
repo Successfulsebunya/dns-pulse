@@ -15,7 +15,7 @@ def query(endpoint,domain,kind):
         return {'ok':False,'ms':None,'answers':[],'error':str(e)[:150]}
 def main():
     domains=sorted(set(str(x).strip().lower().rstrip('.') for x in cfg['domains']))
-    if not domains or any(not re.fullmatch(r'(?=.{1,253}$)(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\\.)+[a-z]{2,63}',d) for d in domains):raise ValueError('Invalid domains')
+    if not domains or any(not re.fullmatch(r'(?=.{1,253}$)(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z]{2,63}',d) for d in domains):raise ValueError('Invalid domains')
     now=datetime.now(timezone.utc);stamp=now.isoformat(timespec='seconds').replace('+00:00','Z')
     path=ROOT/'data/history.json'
     try:history=json.loads(path.read_text()).get('samples',[])

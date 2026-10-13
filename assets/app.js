@@ -84,9 +84,10 @@ async function initialize(){
     const response=await fetch('config.json');if(!response.ok)throw Error('Could not load DNS resolver configuration.');config=await response.json();
     const shared=new URL(location.href).searchParams.get('session');let saved=null;
     try{saved=JSON.parse(sessionStorage.getItem(SESSION_KEY));}catch{}
-    if(shared){const incoming=parseToken(shared);session=saved&&saved.id===incoming.id&&JSON.stringify(saved.domains)===JSON.stringify(incoming.domains)?saved:incoming;}
+    let tokenError='';
+    if(shared){try{const incoming=parseToken(shared);session=saved&&saved.id===incoming.id&&Array.isArray(saved.samples)&&JSON.stringify(saved.domains)===JSON.stringify(incoming.domains)?saved:incoming;}catch(error){session=freshSession();tokenError=error.message+' Started a new session. ';}}
     else session=freshSession();
-    persist();displaySession();message('Session '+session.id+'. Enter a domain or share your session token.');
+    persist();displaySession();message(tokenError+'Session '+session.id+'. Enter a domain or share your session token.');
     if(session.domains.length)await checkDomains();
     setInterval(()=>{if(!document.hidden)checkDomains();},300000);
   }catch(error){message(error.message);}

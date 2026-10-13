@@ -31,7 +31,7 @@ jobs:
       - name: Stage dashboard files
         run: |
           mkdir _site
-          cp index.html config.json .nojekyll _site/
+          cp index.html public.html config.json .nojekyll _site/
           cp -R assets data _site/
       - uses: actions/upload-pages-artifact@v3
         with:

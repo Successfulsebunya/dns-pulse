@@ -1,0 +1,11 @@
+{
+  "domains": [
+    "cursor.ug",
+    "pulsehosts.com"
+  ],
+  "resolvers": {
+    "Cloudflare": "https://cloudflare-dns.com/dns-query",
+    "Google": "https://dns.google/resolve"
+  },
+  "retention_hours": 48
+}

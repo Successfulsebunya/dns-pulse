@@ -10,10 +10,13 @@ concurrency:
   cancel-in-progress: false
 jobs:
   check:
+    if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: main
       - name: Collect DNS measurements
         run: python3 scripts/check_dns.py
       - name: Commit updated data

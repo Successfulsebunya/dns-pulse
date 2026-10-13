@@ -20,7 +20,6 @@ function parseToken(value){
 function message(text){write('sessionMessage',text);}
 function persist(){
   const since=cutoff();session.samples=session.samples.filter(s=>timestamp(s.at)>=since).slice(-12000);
-  try{sessionStorage.setItem(SESSION_KEY,JSON.stringify(session));}catch{message('Browser storage is unavailable; keep this tab open to retain your measurements.');}
   const url=new URL(location.href);url.searchParams.set('session',tokenFor(session));history.replaceState(null,'',url);
 }
 function displaySession(){
@@ -74,19 +73,22 @@ $('domainForm').addEventListener('submit',async event=>{
   }catch(error){message(error.message);}
 });
 $('joinForm').addEventListener('submit',event=>{event.preventDefault();if(busy){message('Wait for the current checks to finish, then join the session.');return;}join($('sessionToken').value);});
-$('newSession').addEventListener('click',()=>{generation++;session=freshSession();$('domainInput').value='';$('sessionToken').value='';persist();displaySession();message('New session '+session.id+'. Enter a domain to begin.');});
+function resetSession(){generation++;session=freshSession();$('domainInput').value='';$('sessionToken').value='';persist();displaySession();message('New session '+session.id+'. Enter a domain to begin.');}
+$('newSession').addEventListener('click',resetSession);
 $('shareSession').addEventListener('click',()=>{const url=new URL(location.href);url.hash='';url.searchParams.set('session',tokenFor(session));copy(url.href,'Session link');});
 $('copyToken').addEventListener('click',()=>copy(tokenFor(session),'Session token'));
 $('domain').addEventListener('change',()=>{session.selected=$('domain').value;persist();displaySession();});
-$('refresh').addEventListener('click',()=>checkDomains());
+$('refresh').addEventListener('click',resetSession);
 async function initialize(){
   try{
     const response=await fetch('config.json');if(!response.ok)throw Error('Could not load DNS resolver configuration.');config=await response.json();
-    const shared=new URL(location.href).searchParams.get('session');let saved=null;
-    try{saved=JSON.parse(sessionStorage.getItem(SESSION_KEY));}catch{}
+    const shared=new URL(location.href).searchParams.get('session');
+    const reloaded=performance.getEntriesByType('navigation')[0]?.type==='reload';
+    try{sessionStorage.removeItem(SESSION_KEY);}catch{}
     let tokenError='';
-    if(shared){try{const incoming=parseToken(shared);session=saved&&saved.id===incoming.id&&Array.isArray(saved.samples)&&JSON.stringify(saved.domains)===JSON.stringify(incoming.domains)?saved:incoming;}catch(error){session=freshSession();tokenError=error.message+' Started a new session. ';}}
+    if(shared&&!reloaded){try{session=parseToken(shared);}catch(error){session=freshSession();tokenError=error.message+' Started a new session. ';}}
     else session=freshSession();
+    $('domainInput').value='';$('sessionToken').value='';
     persist();displaySession();message(tokenError+'Session '+session.id+'. Enter a domain or share your session token.');
     if(session.domains.length)await checkDomains();
     setInterval(()=>{if(!document.hidden)checkDomains();},300000);
